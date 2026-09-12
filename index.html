@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#16171a" />
+<title>CloudCard</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===================== HOME SCREEN ===================== -->
+  <section class="screen" id="screen-home" data-screen="home">
+    <header class="topbar">
+      <h1 class="logo">Cloud<span>Card</span></h1>
+    </header>
+
+    <div class="search-wrap">
+      <input type="search" id="search-input" placeholder="Search name, company, phone..." autocomplete="off" />
+    </div>
+
+    <div id="empty-state" class="empty-state hidden">
+      <div class="empty-mark">◇</div>
+      <p>No cards yet.</p>
+      <p class="muted">Scan your first business card to get started.</p>
+    </div>
+
+    <ul id="contact-list" class="contact-list"></ul>
+
+    <button id="btn-scan-fab" class="fab" aria-label="Scan a card">
+      <svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 7a2 2 0 0 1 2-2h1.2a1 1 0 0 0 .8-.4l.9-1.2A2 2 0 0 1 10.5 3h3a2 2 0 0 1 1.6.8l.9 1.2a1 1 0 0 0 .8.4H18a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12.5" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      <span>Scan Card</span>
+    </button>
+  </section>
+
+  <!-- ===================== CAPTURE SCREEN ===================== -->
+  <section class="screen hidden" id="screen-capture" data-screen="capture">
+    <header class="topbar topbar--dark">
+      <button class="icon-btn" data-nav-back>‹</button>
+      <h2>Scan Card</h2>
+      <span class="topbar-spacer"></span>
+    </header>
+
+    <div class="camera-wrap">
+      <video id="camera-video" autoplay playsinline muted></video>
+      <div id="camera-fallback" class="camera-fallback hidden">
+        <p>Camera not available.</p>
+        <p class="muted">Use gallery import instead.</p>
+      </div>
+    </div>
+
+    <div class="capture-controls">
+      <label class="btn btn--ghost" for="file-input">Gallery</label>
+      <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden" />
+      <button id="btn-shutter" class="shutter" aria-label="Take photo"></button>
+      <span class="capture-controls-spacer"></span>
+    </div>
+  </section>
+
+  <!-- ===================== CROP SCREEN ===================== -->
+  <section class="screen hidden" id="screen-crop" data-screen="crop">
+    <header class="topbar topbar--dark">
+      <button class="icon-btn" data-nav-back>‹</button>
+      <h2>Crop &amp; Rotate</h2>
+      <button id="btn-crop-done" class="text-btn">Next</button>
+    </header>
+
+    <div class="crop-wrap">
+      <canvas id="crop-canvas"></canvas>
+    </div>
+
+    <div class="rotate-controls">
+      <button id="btn-rotate-left" class="icon-btn" aria-label="Rotate left">⟲</button>
+      <input type="range" id="fine-rotate" min="-15" max="15" value="0" step="0.5" />
+      <button id="btn-rotate-right" class="icon-btn" aria-label="Rotate right">⟳</button>
+    </div>
+    <p class="hint">Drag the corner handles to fit the card edges.</p>
+  </section>
+
+  <!-- ===================== PROCESSING SCREEN ===================== -->
+  <section class="screen hidden" id="screen-processing" data-screen="processing">
+    <div class="processing-wrap">
+      <div class="spinner"></div>
+      <p id="processing-label">Reading text from card…</p>
+    </div>
+  </section>
+
+  <!-- ===================== REVIEW SCREEN ===================== -->
+  <section class="screen hidden" id="screen-review" data-screen="review">
+    <header class="topbar topbar--dark">
+      <button class="icon-btn" data-nav-back>‹</button>
+      <h2 id="review-title">Review Contact</h2>
+      <span class="topbar-spacer"></span>
+    </header>
+
+    <form id="review-form" class="review-form">
+      <img id="review-thumb" class="review-thumb" alt="Scanned card" />
+
+      <label>Name
+        <input type="text" name="name" id="f-name" required />
+      </label>
+      <label>Company
+        <input type="text" name="company" id="f-company" />
+      </label>
+      <label>Job Title
+        <input type="text" name="title" id="f-title" />
+      </label>
+      <label>Phone
+        <input type="tel" name="phone" id="f-phone" />
+      </label>
+      <label>Email
+        <input type="email" name="email" id="f-email" />
+      </label>
+      <label>Website
+        <input type="text" name="website" id="f-website" />
+      </label>
+      <label>Address
+        <textarea name="address" id="f-address" rows="2"></textarea>
+      </label>
+      <label>Tags <span class="muted">(comma separated)</span>
+        <input type="text" name="tags" id="f-tags" placeholder="client, conference" />
+      </label>
+      <label>Notes
+        <textarea name="notes" id="f-notes" rows="2"></textarea>
+      </label>
+
+      <div class="review-actions">
+        <button type="button" id="btn-cancel-review" class="btn btn--ghost">Cancel</button>
+        <button type="submit" class="btn btn--primary">Save Contact</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===================== DETAIL SCREEN ===================== -->
+  <section class="screen hidden" id="screen-detail" data-screen="detail">
+    <header class="topbar topbar--dark">
+      <button class="icon-btn" data-nav-back>‹</button>
+      <h2 id="detail-name">Contact</h2>
+      <button id="btn-edit" class="text-btn">Edit</button>
+    </header>
+
+    <div class="detail-body">
+      <img id="detail-image" class="detail-image" alt="Business card" />
+
+      <div class="detail-info">
+        <h3 id="detail-title-line"></h3>
+        <p id="detail-company-line" class="muted"></p>
+      </div>
+
+      <div class="quick-actions">
+        <a id="qa-call" class="qa" href="#">
+          <span>📞</span><span>Call</span>
+        </a>
+        <a id="qa-email" class="qa" href="#">
+          <span>✉️</span><span>Email</span>
+        </a>
+        <a id="qa-web" class="qa" href="#" target="_blank" rel="noopener">
+          <span>🌐</span><span>Website</span>
+        </a>
+      </div>
+
+      <div id="detail-tags" class="tag-row"></div>
+
+      <dl class="detail-fields" id="detail-fields"></dl>
+
+      <div class="detail-notes-wrap">
+        <h4>Notes</h4>
+        <p id="detail-notes" class="muted"></p>
+      </div>
+
+      <button id="btn-delete" class="btn btn--danger">Delete Contact</button>
+    </div>
+  </section>
+
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
