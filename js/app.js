@@ -1,6 +1,6 @@
 import { getAllContacts, getContact, saveContact, deleteContact, newId } from "./db.js";
 import { createCropper } from "./cropper.js";
-import { recognizeText } from "./ocr.js";
+import { recognizeCard, preprocessForOcr } from "./ocr.js";
 import { extractFields } from "./extract.js";
 
 // ---------------------------------------------------------------
@@ -191,16 +191,18 @@ document.getElementById("btn-crop-done").addEventListener("click", async () => {
 // ---------------------------------------------------------------
 async function runOcrAndExtract() {
   const label = document.getElementById("processing-label");
-  label.textContent = "Loading OCR engine…";
+  label.textContent = "Preparing image…";
   try {
-    const text = await recognizeText(flow.cardCanvas, (m) => {
+    const ocrCanvas = preprocessForOcr(flow.cardCanvas);
+    label.textContent = "Loading OCR engine…";
+    const ocrResult = await recognizeCard(ocrCanvas, (m) => {
       if (m.status === "recognizing text") {
         label.textContent = `Reading text… ${Math.round((m.progress || 0) * 100)}%`;
       } else if (m.status) {
         label.textContent = m.status.charAt(0).toUpperCase() + m.status.slice(1) + "…";
       }
     });
-    const fields = extractFields(text);
+    const fields = extractFields(ocrResult);
     openReview(fields);
   } catch (err) {
     console.error(err);
